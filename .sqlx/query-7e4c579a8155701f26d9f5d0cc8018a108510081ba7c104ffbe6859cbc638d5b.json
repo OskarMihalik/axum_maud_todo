@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "--sql INSERT INTO todo (name) values ($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "7e4c579a8155701f26d9f5d0cc8018a108510081ba7c104ffbe6859cbc638d5b"
+}

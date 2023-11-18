@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "--sql\n    SELECT * FROM todo\n    ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "name",
+        "ordinal": 1,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "01dd1cb6353ec9925a676e7a6def699b713fb8868efc1fe7818be63be2ec6266"
+}
