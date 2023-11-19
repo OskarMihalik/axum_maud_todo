@@ -1,5 +1,5 @@
 [package]
-name = "axum-htmx"
+name = "axum-htmx-todo"
 version = "0.1.0"
 edition = "2021"
 
@@ -15,3 +15,4 @@ tower-http = { features = ["full"] }
 mime_guess = "2.0.4"
 axum_static = "1.2.3"
 sqlx = { version = "0.7", features = [ "runtime-tokio", "sqlite", "json" ] }
+axum-htmx = "0.4.0"

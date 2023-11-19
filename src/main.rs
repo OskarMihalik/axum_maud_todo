@@ -1,6 +1,10 @@
 use axum::extract::State;
+use axum::response::IntoResponse;
+use axum::Form;
 use axum::{routing::get, Router};
+use axum_htmx::HxResponseTrigger;
 use maud::{html, Markup, DOCTYPE};
+use serde::Deserialize;
 use sqlx::sqlite::SqlitePoolOptions;
 use sqlx::{migrate::MigrateDatabase, Sqlite};
 use sqlx::{Pool, SqlitePool};
@@ -22,8 +26,6 @@ async fn main() {
     let db_pool = SqlitePoolOptions::new().connect(DB_URL).await.unwrap();
 
     setup_db(&db_pool).await;
-    // let pool = SqlitePoolOptions::new().max_connections(5).connect("/db/d")
-
     // build our application with a single route
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
@@ -46,9 +48,6 @@ async fn get_todos(State(db_pool): State<SqlitePool>) -> Markup {
     // println!("result: {:?}", result)
     match result {
         Ok(todos) => {
-            // todo.into().
-            // todo.name;
-            // todos.iter().map(|todo| todo.name).collect();
             let new_todo: Vec<&str> = todos.iter().map(|record| record.name.as_str()).collect();
             return todos_items(new_todo);
         }
@@ -56,13 +55,31 @@ async fn get_todos(State(db_pool): State<SqlitePool>) -> Markup {
     }
 }
 
-async fn create_new_todo(State(db_pool): State<SqlitePool>) -> Markup {
-    let result = sqlx::query!("--sql INSERT INTO todo (name) values ($1)")
+#[derive(Deserialize)]
+struct NewTodo {
+    name: String,
+}
+
+async fn create_new_todo(
+    State(db_pool): State<SqlitePool>,
+    Form(new_todo): Form<NewTodo>,
+) -> impl IntoResponse {
+    let result = sqlx::query!("INSERT INTO todo (name) values (?1)", new_todo.name)
         .execute(&db_pool)
         .await;
     match result {
-        Ok(_) => return ok_response(),
-        Err(error) => return error_response(&error.to_string()),
+        Ok(_) => {
+            return (
+                HxResponseTrigger(vec!["updateTodos".to_string()]),
+                ok_response(""),
+            )
+        }
+        Err(error) => {
+            return (
+                HxResponseTrigger(vec!["updateTodos".to_string()]),
+                error_response(&error.to_string()),
+            )
+        }
     }
 }
 
@@ -79,10 +96,10 @@ fn error_response(error: &str) -> Markup {
     )
 }
 
-fn ok_response() -> Markup {
+fn ok_response(message: &str) -> Markup {
     html!(
         div {
-            "ok"
+            "ok " (message)
         }
     )
 }
@@ -101,16 +118,22 @@ async fn head() -> Markup {
             }
             body
                 ."flex justify-center flex-col items-center" {
-                button
-                    hx-get="/todos"
-                    hx-target="#todos"
-                    ."border-black border max-w-xs" {
-                    "Click me please"
+                form
+                    hx-post="/todos"
+                    hx-target="#todosSubmitMessage" {
+                    input placeholder="New todo" name="name";
+                    button
+                        ."border-black border max-w-xs" {
+                        "Submit"
+                    }
                 }
                 p ."text-center" {
-                    "asdfasf"
+                    "Todos:"
                 }
-                div id="todos" {
+                div hx-get="/todos" hx-trigger="load, updateTodos from:body" id="todos" {
+
+                }
+                p id="todosSubmitMessage" {
 
                 }
             }
