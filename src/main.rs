@@ -1,5 +1,6 @@
-use axum::extract::State;
+use axum::extract::{Path, State};
 use axum::response::IntoResponse;
+use axum::routing::patch;
 use axum::Form;
 use axum::{routing::get, Router};
 use axum_htmx::HxResponseTrigger;
@@ -30,6 +31,8 @@ async fn main() {
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
         .route("/todos", get(get_todos).post(create_new_todo))
+        .route("/todos/:id", patch(update_todo))
+        // .route("/todos/:id", post())
         .route("/html", get(head))
         .with_state(db_pool)
         .nest("/static", axum_static::static_router("static"));
@@ -41,15 +44,21 @@ async fn main() {
         .unwrap();
 }
 
+#[derive(Deserialize)]
+struct Todo {
+    id: i64,
+    name: String,
+}
+
 async fn get_todos(State(db_pool): State<SqlitePool>) -> Markup {
-    let result = sqlx::query!("SELECT name FROM todo")
+    let result = sqlx::query_as!(Todo, "SELECT id, name FROM todo")
         .fetch_all(&db_pool)
         .await;
     // println!("result: {:?}", result)
     match result {
         Ok(todos) => {
-            let new_todo: Vec<&str> = todos.iter().map(|record| record.name.as_str()).collect();
-            return todos_items(new_todo);
+            // let new_todo: Vec<&str> = todos.iter().map(|record| record.name.as_str()).collect();
+            return todos_items(todos);
         }
         Err(error) => return error_response(&error.to_string()),
     }
@@ -140,11 +149,46 @@ async fn head() -> Markup {
     }
 }
 
-fn todos_items(todos: Vec<&str>) -> Markup {
+async fn update_todo(
+    Path(todo_id): Path<String>,
+    State(db_pool): State<SqlitePool>,
+    Form(new_todo): Form<NewTodo>,
+) -> impl IntoResponse {
+    let result = sqlx::query!(
+        "UPDATE todo SET name=(?1) WHERE id=(?2)",
+        new_todo.name,
+        todo_id
+    )
+    .execute(&db_pool)
+    .await;
+    println!("{:?} {}", todo_id, new_todo.name);
+    match result {
+        Ok(_) => {
+            return (
+                HxResponseTrigger(vec!["updateTodos".to_string()]),
+                ok_response(""),
+            )
+        }
+        Err(error) => {
+            return (
+                HxResponseTrigger(vec!["updateTodos".to_string()]),
+                error_response(&error.to_string()),
+            )
+        }
+    }
+}
+
+fn todos_items(todos: Vec<Todo>) -> Markup {
     html!(
-        @for todo in &todos{
-            li {
-                (todo)
+        @for todo in todos{
+            ul {
+                form hx-patch=(format!("/todos/{}", todo.id)) hx-target="#todosSubmitMessage" {
+                    input value=(todo.name) name="name" ;
+                    button
+                        ."border-black border max-w-xs" {
+                        "Change"
+                    }
+                }
             }
         }
     )
