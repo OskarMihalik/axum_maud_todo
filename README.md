@@ -6,3 +6,6 @@ this is a proof of concept doing todo aplication with these technologies:
 - for interactivity and loading templates on frontend i used HTMX https://htmx.org/
 - for database i used sqlite
 - for quering and writing sql i used sqlx https://github.com/launchbadge/sqlx
+
+to run development:
+```cargo watch -x run```
