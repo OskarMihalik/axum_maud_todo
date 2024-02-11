@@ -1,13 +1,9 @@
 use maud::{html, Markup};
 use serde::Deserialize;
 
-#[derive(Deserialize)]
-pub struct Todo {
-    pub id: i64,
-    pub name: String,
-}
+use crate::cornucopia::queries::todo::SelectTodos;
 
-pub fn todos_items(todos: Vec<Todo>) -> Markup {
+pub fn todos_items(todos: Vec<SelectTodos>) -> Markup {
     html!(
         @for todo in todos {
             ul ."flex gap-1"{
