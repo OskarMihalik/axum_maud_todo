@@ -1,4 +1,4 @@
-use std::result;
+
 
 use crate::cornucopia::queries::todo::delete_todo as delete_todo_q;
 use crate::cornucopia::queries::todo::insert_todo;
@@ -10,23 +10,21 @@ use crate::{
         response::{error_response, ok_response},
         todo::todos_items,
     },
-    cornucopia::queries::todo::UpdateTodoParams,
 };
-use axum::http::StatusCode;
+
 use axum::{
     extract::{Path, State},
-    response::IntoResponse,
     Form,
 };
 
 use axum_htmx::HxResponseTrigger;
-use axum_macros::debug_handler;
+
 use bb8::RunError;
-use deadpool_postgres::{Manager, Object};
+
 use maud::Markup;
 use serde::Deserialize;
-use serde::Serialize;
-use sqlx::SqlitePool;
+
+
 use tokio_postgres::Error;
 use tokio_postgres::GenericClient;
 

@@ -1,15 +1,13 @@
-use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
 use axum::routing::patch;
-use axum::Json;
+
 use axum::{routing::get, Router};
 use components::main::head;
-use serde_json::json;
-use services::crud::{create_new_todo, delete_todo, get_todos, update_todo};
-use thiserror::Error;
-use tokio_postgres::{Config, NoTls};
 
-use bb8::{Pool, PooledConnection};
+use services::crud::{create_new_todo, delete_todo, get_todos, update_todo};
+
+use tokio_postgres::NoTls;
+
+use bb8::Pool;
 use bb8_postgres::PostgresConnectionManager;
 
 mod components;

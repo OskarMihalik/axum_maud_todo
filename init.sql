@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS todo (
-    id INTEGER PRIMARY KEY NOT NULL, 
+    id SERIAL, 
     name VARCHAR(250) NOT NULL
     );
 
