@@ -10,6 +10,7 @@ use crate::{
     },
     cornucopia::queries::todo::UpdateTodoParams,
 };
+use axum::http::StatusCode;
 use axum::{
     extract::{Path, State},
     response::IntoResponse,
@@ -18,11 +19,13 @@ use axum::{
 
 use axum_htmx::HxResponseTrigger;
 use axum_macros::debug_handler;
+use bb8::RunError;
 use deadpool_postgres::{Manager, Object};
 use maud::Markup;
 use serde::Deserialize;
 use serde::Serialize;
 use sqlx::SqlitePool;
+use tokio_postgres::Error;
 use tokio_postgres::GenericClient;
 // }, cornucopia::queries::todo::update_todo};
 
@@ -31,34 +34,32 @@ pub struct NewTodo {
     pub name: String,
 }
 
-// #[debug_handler]
+fn map_err_to_markup(error: RunError<Error>) -> Markup {
+    error_response(&error.to_string())
+}
+
 pub async fn update_todo(
     Path(todo_id): Path<i32>,
     State(pool): State<ConnectionPool>,
     Form(new_todo): Form<NewTodo>,
-) -> impl IntoResponse {
-    let client = pool.get().await.unwrap();
+) -> Result<(HxResponseTrigger, Markup), Markup> {
+    let connection = pool.get().await.map_err(map_err_to_markup)?;
+
     let result = update_todo_q()
-        .bind(client.client(), &new_todo.name, &todo_id)
+        .bind(connection.client(), &new_todo.name, &todo_id)
         .await;
 
     match result {
         Ok(_) => {
-            return (
+            return Ok((
                 HxResponseTrigger(vec!["updateTodos".to_string()]),
                 ok_response(""),
-            )
+            ))
         }
-        Err(error) => {
-            return (
-                HxResponseTrigger(vec!["updateTodos".to_string()]),
-                error_response(&error.to_string()),
-            )
-        }
+        Err(error) => return Err(error_response(&error.to_string())),
     }
 }
 
-// #[debug_handler]
 // pub async fn delete_todo(
 //     Path(todo_id): Path<i32>,
 //     State(db_pool): State<Object>,
