@@ -1,16 +1,13 @@
+use crate::components::{
+    response::{error_response, ok_response},
+    todo::todos_items,
+};
 use crate::cornucopia::queries::todo::delete_todo as delete_todo_q;
 use crate::cornucopia::queries::todo::insert_todo;
 use crate::cornucopia::queries::todo::select_todos;
 use crate::cornucopia::queries::todo::update_todo as update_todo_q;
 use crate::cornucopia::queries::todo::SelectTodosParams;
 use crate::ConnectionPool;
-use crate::{
-    components::{
-        response::{error_response, ok_response},
-        todo::todos_items,
-    },
-    cornucopia::queries::todo::SelectTodosQuery,
-};
 
 use axum::{
     extract::{Path, Query, State},

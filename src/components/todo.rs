@@ -1,9 +1,6 @@
 use maud::{html, Markup};
 
-use crate::{
-    cornucopia::queries::todo::SelectTodos,
-    target_consts::{TODOS_ID, TODOS_TARGET},
-};
+use crate::{cornucopia::queries::todo::SelectTodos, target_consts::TODOS_TARGET};
 
 pub fn todos_items(todos: Vec<SelectTodos>, page: i64) -> Markup {
     html!(
