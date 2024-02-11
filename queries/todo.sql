@@ -7,5 +7,8 @@ DELETE FROM todo WHERE id=(:id);
 --! insert_todo (name)
 INSERT INTO todo (name) values (:name);
 
---! select_todos
-SELECT id, name FROM todo;
+--! select_todos (limit, offset)
+SELECT id, name FROM todo 
+ORDER BY todo.id
+LIMIT :limit
+OFFSET :offset;

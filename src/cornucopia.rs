@@ -4,7 +4,7 @@
 #[allow(unused_imports)] #[allow(dead_code)] pub mod types { }#[allow(clippy :: all, clippy :: pedantic)] #[allow(unused_variables)]
 #[allow(unused_imports)] #[allow(dead_code)] pub mod queries
 { pub mod todo
-{ use futures::{{StreamExt, TryStreamExt}};use futures; use cornucopia_async::GenericClient;#[derive( Debug)] pub struct UpdateTodoParams < T1 : cornucopia_async::StringSql,> { pub name : T1,pub id : i32,}#[derive( Debug, Clone, PartialEq, )] pub struct SelectTodos
+{ use futures::{{StreamExt, TryStreamExt}};use futures; use cornucopia_async::GenericClient;#[derive( Debug)] pub struct UpdateTodoParams < T1 : cornucopia_async::StringSql,> { pub name : T1,pub id : i32,}#[derive(Clone,Copy, Debug)] pub struct SelectTodosParams < > { pub limit : i64,pub offset : i64,}#[derive( Debug, Clone, PartialEq, )] pub struct SelectTodos
 { pub id : i32,pub name : String,}pub struct SelectTodosBorrowed < 'a >
 { pub id : i32,pub name : &'a str,} impl < 'a > From < SelectTodosBorrowed <
 'a >> for SelectTodos
@@ -87,16 +87,28 @@ name : & 'a T1,) -> Result < u64, tokio_postgres :: Error >
     let stmt = self.0.prepare(client) .await ? ;
     client.execute(stmt, & [name,]) .await
 } }pub fn select_todos() -> SelectTodosStmt
-{ SelectTodosStmt(cornucopia_async :: private :: Stmt :: new("SELECT id, name FROM todo")) } pub
+{ SelectTodosStmt(cornucopia_async :: private :: Stmt :: new("SELECT id, name FROM todo 
+ORDER BY todo.id
+LIMIT $1
+OFFSET $2")) } pub
 struct SelectTodosStmt(cornucopia_async :: private :: Stmt) ; impl
 SelectTodosStmt { pub fn bind < 'a, C : GenericClient, >
 (& 'a mut self, client : & 'a  C,
-) -> SelectTodosQuery < 'a, C,
-SelectTodos, 0 >
+limit : & 'a i64,offset : & 'a i64,) -> SelectTodosQuery < 'a, C,
+SelectTodos, 2 >
 {
     SelectTodosQuery
     {
-        client, params : [], stmt : & mut self.0, extractor :
+        client, params : [limit,offset,], stmt : & mut self.0, extractor :
         | row | { SelectTodosBorrowed { id : row.get(0),name : row.get(1),} }, mapper : | it | { <SelectTodos>::from(it) },
     }
-} }}}
+} }impl < 'a, C : GenericClient, > cornucopia_async ::
+Params < 'a, SelectTodosParams < >, SelectTodosQuery < 'a,
+C, SelectTodos, 2 >, C > for SelectTodosStmt
+{
+    fn
+    params(& 'a mut self, client : & 'a  C, params : & 'a
+    SelectTodosParams < >) -> SelectTodosQuery < 'a, C,
+    SelectTodos, 2 >
+    { self.bind(client, & params.limit,& params.offset,) }
+}}}

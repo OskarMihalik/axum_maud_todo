@@ -13,6 +13,7 @@ use bb8_postgres::PostgresConnectionManager;
 mod components;
 mod cornucopia;
 mod services;
+mod target_consts;
 
 #[tokio::main]
 async fn main() {
@@ -32,7 +33,7 @@ async fn main() {
         .with_state(pool)
         .nest("/static", axum_static::static_router("static"));
 
-    // run it with hyper on localhost:3000
+    // run it with hyper on localhost:3008
     axum::Server::bind(&"0.0.0.0:3008".parse().unwrap())
         .serve(app.into_make_service())
         .await

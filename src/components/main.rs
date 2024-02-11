@@ -1,4 +1,6 @@
-use maud::{Markup, html, DOCTYPE};
+use maud::{html, Markup, DOCTYPE};
+
+use crate::target_consts::TODOS_ID;
 
 pub async fn head() -> Markup {
     html! {
@@ -26,7 +28,7 @@ pub async fn head() -> Markup {
                 p ."text-center" {
                     "Todos:"
                 }
-                div hx-get="/todos" hx-trigger="load, updateTodos from:body" id="todos" {
+                div hx-get="/todos?page=0" hx-trigger="load, updateTodos from:body" id=(TODOS_ID) {
 
                 }
                 p id="todosSubmitMessage" {
